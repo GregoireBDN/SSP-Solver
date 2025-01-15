@@ -7,6 +7,15 @@ Ce projet implémente deux approches pour résoudre le problème de la somme de 
 
 Chaque approche est disponible avec deux implémentations différentes (V1 et V2) des structures de données.
 
+## Documentation
+
+Pour plus de détails sur les approches et les implémentations, consultez les documents suivants :
+
+- [Approche Branch and Prune (BP)](docs/branch_and_prune.md)
+- [Approche Dynamic Programming (DP)](docs/dynamic_programming.md)
+- [Implémentation V1](docs/implementation_v1.md)
+- [Implémentation V2](docs/implementation_v2.md)
+
 ## Prérequis
 
 - **Java 17** ou supérieur
@@ -22,8 +31,13 @@ ssp-solver/
 │ │ ├── impl/ # Implémentations V1 et V2
 │ │ └── solver/ # Classes de résolution SSP
 │ └── test/java/ # Tests unitaires
-├── pom.xml # Configuration Maven
-└── README.md # Documentation
+├── docs/                  # Documentation
+│ ├── branch_and_prune.md
+│ ├── dynamic_programming.md
+│ ├── implementation_v1.md
+│ └── implementation_v2.md
+├── pom.xml                # Configuration Maven
+└── README.md              # Documentation principale
 ```
 
 ## Installation
@@ -85,4 +99,4 @@ mvn test
 
 ## Auteurs
 
-- **Gregoire Bodin** - [Profil GitHub](https://github.com/gregoire-bodin)
+- **Gregoire Bodin** - [Profil GitHub](https://github.com/GregoireBDN)
