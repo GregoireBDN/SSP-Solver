@@ -22,6 +22,7 @@ public class SubsetV2 implements Subset {
     */
    private Set<SubsetV2> set; // set of reference subsets
    private long sum; // common sum for all subsets + last integer
+   private int cardinality; // cached cardinality
 
    /*
     * constructor for empty subset
@@ -29,6 +30,7 @@ public class SubsetV2 implements Subset {
    public SubsetV2() {
       this.set = new HashSet<SubsetV2>();
       this.sum = 0;
+      this.cardinality = 0;
    }
 
    /*
@@ -40,6 +42,7 @@ public class SubsetV2 implements Subset {
       this.set = new HashSet<SubsetV2>();
       this.set.add(new SubsetV2());
       this.sum = value;
+      this.cardinality = 1;
    }
 
    /*
@@ -60,6 +63,7 @@ public class SubsetV2 implements Subset {
       this.set = new HashSet<SubsetV2>();
       this.set.add(subset);
       this.sum = subset.getSum() + value;
+      this.cardinality = subset.getCardinality() + 1;
    }
 
    /*
@@ -77,18 +81,7 @@ public class SubsetV2 implements Subset {
     * @return the cardinality
     */
    public int getCardinality() {
-      int cardinality = 0;
-      for (SubsetV2 sub : this.getSubsets()) {
-         if (sub.getSubsets().isEmpty()) {
-            cardinality = cardinality + 1;
-         } else {
-            cardinality = cardinality + sub.getCardinality();
-         }
-      }
-      if (cardinality == 0) {
-         cardinality = 1;
-      }
-      return cardinality;
+      return this.cardinality;
    }
 
    /*
@@ -98,16 +91,22 @@ public class SubsetV2 implements Subset {
     */
    public Set<Long> getValues() {
       Set<Long> values = new HashSet<Long>();
+      collectValues(values);
+      return values;
+   }
+
+   private void collectValues(Set<Long> values) {
       if (!this.getSubsets().isEmpty()) {
          Iterator<SubsetV2> it = this.getSubsets().iterator();
-         SubsetV2 parent = it.next();
-         long value = this.getSum() - parent.getSum();
-         if (value != 0) {
-            values.add(value);
+         while (it.hasNext()) {
+            SubsetV2 parent = it.next();
+            long value = this.getSum() - parent.getSum();
+            if (value != 0) {
+               values.add(value);
+            }
+            parent.collectValues(values);
          }
-         values.addAll(parent.getValues());
       }
-      return values;
    }
 
    /*
@@ -126,6 +125,7 @@ public class SubsetV2 implements Subset {
     */
    public void addSubset(SubsetV2 subset) {
       this.set.add(subset);
+      this.cardinality++;
    }
 
    /*
@@ -139,12 +139,19 @@ public class SubsetV2 implements Subset {
       if (other == null) {
          return false;
       }
-      for (SubsetV2 sub : other.getSubsets()) {
-         if (!this.getSubsets().contains(sub)) {
-            return false;
+
+      // Comparer les valeurs au lieu des références
+      Set<Long> otherValues = other.getValues();
+
+      // Vérifier chaque sous-ensemble pour voir s'il contient les mêmes valeurs
+      for (SubsetV2 sub : this.getSubsets()) {
+         Set<Long> subValues = sub.getValues();
+         if (subValues.equals(otherValues)) {
+            return true;
          }
       }
-      return true;
+
+      return false;
    }
 
    /*
@@ -175,6 +182,7 @@ public class SubsetV2 implements Subset {
          throw new IllegalArgumentException("Other subset cannot be null");
       this.sum = other.getSum();
       this.set = new HashSet<SubsetV2>();
+      this.cardinality = other.getCardinality();
       if (!other.getSubsets().isEmpty())
          this.getSubsets().addAll(other.getSubsets());
    }
@@ -204,18 +212,28 @@ public class SubsetV2 implements Subset {
     */
    public void encapsulate(SubsetV2 other) throws IllegalArgumentException {
       if (other == null) {
-         throw new IllegalArgumentException("Other subset cannot be null");
+         throw new IllegalArgumentException("Cannot encapsulate null subset");
       }
-      if (this.getSum() != other.getSum()) {
-         throw new IllegalArgumentException("Cannot encapsulate: this sum differs from other's sum");
-      } else {
-         for (SubsetV2 sub : other.getSubsets()) {
-            if (!this.getSubsets().contains(sub)) {
-               this.set.add(sub);
-               System.out.println("Added subset: " + sub.show());
-            }
+      if (this.equals(other)) {
+         return;
+      }
+
+      // Créer un ensemble pour stocker les ensembles de valeurs déjà présents
+      Set<Set<Long>> existingValueSets = new HashSet<>();
+      for (SubsetV2 sub : this.getSubsets()) {
+         existingValueSets.add(sub.getValues());
+      }
+
+      int added = 0;
+      for (SubsetV2 sub : other.getSubsets()) {
+         Set<Long> values = sub.getValues();
+         if (!existingValueSets.contains(values)) {
+            this.set.add(sub);
+            existingValueSets.add(values);
+            added++;
          }
       }
+      this.cardinality += added;
    }
 
    /*
@@ -246,7 +264,11 @@ public class SubsetV2 implements Subset {
       if (!isSubset)
          return false;
       SubsetV2 other = (SubsetV2) o;
-      return this.getValues().containsAll(other.getValues());
+      if (this.getSum() != other.getSum() || this.getCardinality() != other.getCardinality())
+         return false;
+      Set<Long> thisValues = this.getValues();
+      Set<Long> otherValues = other.getValues();
+      return thisValues.equals(otherValues);
    }
 
    /*
@@ -316,6 +338,44 @@ public class SubsetV2 implements Subset {
       if (nsets > 1)
          s = s + "s";
       return s + " with sum " + this.sum + ")";
+   }
+
+   /**
+    * Vérifie si ce sous-ensemble contient déjà les valeurs d'un autre
+    * sous-ensemble
+    */
+   public boolean containsValues(Set<Long> values) {
+      // Vérifier d'abord si les valeurs de cet ensemble correspondent
+      if (this.getValues().equals(values)) {
+         return true;
+      }
+
+      // Sinon, vérifier chaque sous-ensemble
+      for (SubsetV2 sub : this.getSubsets()) {
+         if (sub.getValues().equals(values)) {
+            return true;
+         }
+      }
+
+      return false;
+   }
+
+   /**
+    * Méthode spéciale pour la normalisation du résultat de Branch and Prune
+    */
+   public void normalize() {
+      if (this.getSubsets().isEmpty()) {
+         return;
+      }
+
+      // Collecter tous les ensembles de valeurs uniques
+      Set<Set<Long>> uniqueValueSets = new HashSet<>();
+      for (SubsetV2 sub : new HashSet<>(this.getSubsets())) {
+         uniqueValueSets.add(sub.getValues());
+      }
+
+      // Mettre à jour la cardinalité
+      this.cardinality = uniqueValueSets.size();
    }
 
    // main

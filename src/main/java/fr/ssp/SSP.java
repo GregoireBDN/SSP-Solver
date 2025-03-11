@@ -16,6 +16,7 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.util.Random;
 import java.util.Scanner;
+import java.util.Arrays;
 
 /**
  * SSP
@@ -30,7 +31,7 @@ public class SSP {
   /**
    * original
    */
-  private final long[] original;
+  public final long[] original;
   private static final long DEFAULT_SEED = 2L;
   private long seed;
 
@@ -98,6 +99,21 @@ public class SSP {
   }
 
   /**
+   * Constructeur avec un tableau de valeurs et une cible spécifiés
+   * 
+   * @param values tableau des valeurs à utiliser
+   * @param target valeur cible à atteindre
+   */
+  public SSP(long[] values, long target) {
+    if (values == null)
+      throw new IllegalArgumentException("Values array cannot be null");
+
+    this.original = new long[values.length];
+    System.arraycopy(values, 0, this.original, 0, values.length);
+    this.target = target;
+  }
+
+  /**
    * computing the sum of all integers
    * 
    * @return the sum of all integers
@@ -149,68 +165,100 @@ public class SSP {
    * branch-and-prune
    */
   public Subset bp(SubsetFactory factory) {
-    return new BranchAndPruneSolver(target, original, factory).solve();
+    System.err.println("SSP.bp - target: " + target);
+    System.err.println("SSP.bp - valeurs: " + Arrays.toString(original));
+
+    Subset result = new BranchAndPruneSolver(target, original, factory).solve();
+    System.err.println("SSP.bp - résultat: " + result.getSum());
+    return result;
+  }
+
+  /**
+   * Définit les valeurs du tableau original
+   * 
+   * @param values les nouvelles valeurs
+   */
+  public void setValues(long[] values) {
+    if (values == null)
+      throw new IllegalArgumentException("Values array cannot be null");
+
+    if (values.length != this.original.length)
+      throw new IllegalArgumentException("New values array must have the same length as original");
+
+    System.arraycopy(values, 0, this.original, 0, values.length);
   }
 
   /**
    * main
    */
   public static void main(String[] args) throws Exception {
-    SSP ssp = new SSP(15);
+    SSP ssp = new SSP(10);
+    System.out.println("=== Configuration du problème ===");
     System.out.println(ssp);
     System.out.println(ssp.showIntegers());
     System.out.println(ssp.showTarget());
     System.out.println();
 
     // Test avec V1
-    System.out.println("Testing with SubsetV1:");
-    System.out.print("Running bp ... ");
+    System.out.println("=== Test avec SubsetV1 (implémentation avec Set<HashSet<Long>>) ===");
+    System.out.print("Exécution de Branch and Prune ... ");
     long start = System.currentTimeMillis();
     Subset solBP1 = ssp.bp(SubsetFactory.V1);
     long end = System.currentTimeMillis();
-    System.out.println("OK; time " + (end - start));
-    System.out.println(solBP1.show());
-    if (solBP1.getCardinality() < 100)
-      System.out.println(solBP1);
+    System.out.println("OK");
+    System.out.println("Temps d'exécution: " + (end - start) + "ms");
+    System.out.println("Résultat: " + solBP1.show());
     System.out.println();
 
-    System.out.print("Running dynprog ... ");
+    System.out.print("Exécution de Dynamic Programming ... ");
     start = System.currentTimeMillis();
     Subset solDP1 = ssp.dynprog(SubsetFactory.V1);
     end = System.currentTimeMillis();
-    System.out.println("OK; time " + (end - start));
-    System.out.println(solDP1.show());
-    if (solDP1.getCardinality() < 100)
-      System.out.println(solDP1);
+    System.out.println("OK");
+    System.out.println("Temps d'exécution: " + (end - start) + "ms");
+    System.out.println("Résultat: " + solDP1.show());
     System.out.println();
 
     // Test avec V2
-    System.out.println("\nTesting with SubsetV2:");
-    System.out.print("Running bp ... ");
+    System.out.println("=== Test avec SubsetV2 (implémentation récursive) ===");
+    System.out.print("Exécution de Branch and Prune ... ");
     start = System.currentTimeMillis();
     Subset solBP2 = ssp.bp(SubsetFactory.V2);
     end = System.currentTimeMillis();
-    System.out.println("OK; time " + (end - start));
-    System.out.println(solBP2.show());
-    if (solBP2.getCardinality() < 100)
-      System.out.println(solBP2);
+    System.out.println("OK");
+    System.out.println("Temps d'exécution: " + (end - start) + "ms");
+    System.out.println("Résultat: " + solBP2.show());
     System.out.println();
 
-    System.out.print("Running dynprog ... ");
+    System.out.print("Exécution de Dynamic Programming ... ");
     start = System.currentTimeMillis();
     Subset solDP2 = ssp.dynprog(SubsetFactory.V2);
     end = System.currentTimeMillis();
-    System.out.println("OK; time " + (end - start));
-    System.out.println(solDP2.show());
-    if (solDP2.getCardinality() < 100)
-      System.out.println(solDP2);
+    System.out.println("OK");
+    System.out.println("Temps d'exécution: " + (end - start) + "ms");
+    System.out.println("Résultat: " + solDP2.show());
     System.out.println();
 
     // Comparaison des résultats
-    System.out.println("Solutions comparison:");
-    System.out.println("V1 BP vs DP: " + solBP1.equals(solDP1));
-    System.out.println("V2 BP vs DP: " + solBP2.equals(solDP2));
-    System.out.println("V1 vs V2 (BP): " + solBP1.equals(solBP2));
-    System.out.println("V1 vs V2 (DP): " + solDP1.equals(solDP2));
+    System.out.println("=== Comparaison des solutions ===");
+    System.out.println("SubsetV1 - BP vs DP: " +
+        (solBP1.equals(solDP1) ? "IDENTIQUES ✓" : "DIFFÉRENTES ✗"));
+    System.out.println("SubsetV2 - BP vs DP: " +
+        (solBP2.equals(solDP2) ? "IDENTIQUES ✓" : "DIFFÉRENTES ✗"));
+
+    // Comparaison du nombre de solutions
+    System.out.println("\n=== Nombre de solutions trouvées ===");
+    System.out.println("SubsetV1 - BP: " + solBP1.getCardinality() + " sous-ensembles");
+    System.out.println("SubsetV1 - DP: " + solDP1.getCardinality() + " sous-ensembles");
+    System.out.println("SubsetV2 - BP: " + solBP2.getCardinality() + " sous-ensembles");
+    System.out.println("SubsetV2 - DP: " + solDP2.getCardinality() + " sous-ensembles");
+
+    // Comparaison des cardinalités
+    System.out.println("\nBP - V1 vs V2 (nombre): " +
+        (solBP1.getCardinality() == solBP2.getCardinality() ? "MÊME NOMBRE ✓ (" + solBP1.getCardinality() + ")"
+            : "NOMBRE DIFFÉRENT ✗ (V1: " + solBP1.getCardinality() + ", V2: " + solBP2.getCardinality() + ")"));
+    System.out.println("DP - V1 vs V2 (nombre): " +
+        (solDP1.getCardinality() == solDP2.getCardinality() ? "MÊME NOMBRE ✓ (" + solDP1.getCardinality() + ")"
+            : "NOMBRE DIFFÉRENT ✗ (V1: " + solDP1.getCardinality() + ", V2: " + solDP2.getCardinality() + ")"));
   }
 }

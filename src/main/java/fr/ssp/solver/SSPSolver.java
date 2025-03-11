@@ -36,4 +36,8 @@ public abstract class SSPSolver {
   protected Subset createSubset(Subset other, long value) {
     return factory.createSubset(other, value);
   }
+
+  protected Subset addValue(Subset subset, long value) {
+    return factory.createSubset(subset, value);
+  }
 }

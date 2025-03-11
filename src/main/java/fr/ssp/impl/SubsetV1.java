@@ -17,7 +17,7 @@ import fr.ssp.api.Subset;
  */
 public class SubsetV1 implements Subset {
    // attributes
-   private Set<HashSet<Long>> set; // set of subsets of integers
+   public Set<HashSet<Long>> set; // set of subsets of integers
    private long sum; // sum of these integers
 
    /*
@@ -116,11 +116,8 @@ public class SubsetV1 implements Subset {
 
    public void encapsulate(SubsetV1 other) throws IllegalArgumentException {
       if (other == null)
-         throw new IllegalArgumentException("Other subset cannot be null");
-      if (this.sum != other.sum)
-         throw new IllegalArgumentException("Cannot encapsulate: this sum differs from other's sum");
-      for (HashSet<Long> sub : other.set)
-         this.set.add(new HashSet<Long>(sub));
+         throw new IllegalArgumentException("Cannot encapsulate null subset");
+      this.set.addAll(other.set);
    }
 
    /*
@@ -214,6 +211,23 @@ public class SubsetV1 implements Subset {
          }
       }
       return true;
+   }
+
+   public Set<HashSet<Long>> getSetCollection() {
+      return this.set;
+   }
+
+   /**
+    * Retourne un ensemble contenant toutes les valeurs uniques de ce sous-ensemble
+    * 
+    * @return l'ensemble des valeurs
+    */
+   public Set<Long> getValues() {
+      Set<Long> result = new HashSet<>();
+      for (Set<Long> subset : this.set) {
+         result.addAll(subset);
+      }
+      return result;
    }
 
    // main

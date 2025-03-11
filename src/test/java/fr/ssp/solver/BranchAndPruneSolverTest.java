@@ -7,16 +7,16 @@ import fr.ssp.api.Subset;
 import fr.ssp.impl.SubsetFactory;
 
 /**
- * Tests pour l'algorithme Dynamic Programming
+ * Tests pour l'algorithme Branch and Prune
  */
-public class DynamicProgrammingSolverTest {
+public class BranchAndPruneSolverTest {
 
   @Test
   public void testWithSubsetV1() {
     long[] values = { 1, 2, 3, 4, 5 };
     long target = 5;
 
-    DynamicProgrammingSolver solver = new DynamicProgrammingSolver(target, values, SubsetFactory.V1);
+    BranchAndPruneSolver solver = new BranchAndPruneSolver(target, values, SubsetFactory.V1);
     Subset solution = solver.solve();
 
     assertEquals(target, solution.getSum());
@@ -28,11 +28,11 @@ public class DynamicProgrammingSolverTest {
     long[] values = { 1, 2, 3, 4, 5 };
     long target = 5;
 
-    DynamicProgrammingSolver solver = new DynamicProgrammingSolver(target, values, SubsetFactory.V2);
+    BranchAndPruneSolver solver = new BranchAndPruneSolver(target, values, SubsetFactory.V2);
     Subset solution = solver.solve();
 
     assertEquals(target, solution.getSum());
-    // Note: DP avec SubsetV2 peut trouver moins de solutions
+    assertEquals(3, solution.getCardinality()); // {5}, {1,4}, {2,3}
   }
 
   @Test
@@ -40,17 +40,17 @@ public class DynamicProgrammingSolverTest {
     long[] values = { 6, 5, 1, 3, 4 };
     long target = 10;
 
-    DynamicProgrammingSolver solverV1 = new DynamicProgrammingSolver(target, values, SubsetFactory.V1);
+    BranchAndPruneSolver solverV1 = new BranchAndPruneSolver(target, values, SubsetFactory.V1);
     Subset solutionV1 = solverV1.solve();
 
-    DynamicProgrammingSolver solverV2 = new DynamicProgrammingSolver(target, values, SubsetFactory.V2);
+    BranchAndPruneSolver solverV2 = new BranchAndPruneSolver(target, values, SubsetFactory.V2);
     Subset solutionV2 = solverV2.solve();
 
     assertEquals(target, solutionV1.getSum());
     assertEquals(target, solutionV2.getSum());
 
-    // Affichage pour analyse
-    System.out.println("DP - V1: " + solutionV1.getCardinality() + " solutions");
-    System.out.println("DP - V2: " + solutionV2.getCardinality() + " solutions");
+    // Après normalisation, les deux implémentations devraient trouver le même
+    // nombre de solutions
+    assertEquals(solutionV1.getCardinality(), solutionV2.getCardinality());
   }
 }
